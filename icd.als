@@ -153,7 +153,7 @@ pred recv_change_settings[s, s' : State] {
 //
 // NOTE: In the initial template you are given, the attacker
 // is modelled as being able to modify the network contents arbitrarily.
-// Howeever, for later parts of the assignment you will change this definition
+// However, for later parts of the assignment you will change this definition
 // to only permit certain kinds of modifications to the state of the network.
 // When doing so, ensure you update the following line that describes the
 // attacker's abilities.
@@ -274,6 +274,7 @@ check turns_on_safe for 5 but 8 State
 // <FILL IN HERE>
 
 
+// ============================= HAZOP =======================================
 // Relationship to our HAZOP study:
 //
 // <FILL IN HERE>
