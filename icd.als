@@ -1,6 +1,6 @@
 // ===========================================================================
 // SWEN90010 2018 - Assignment 3 Submission
-// by Mengnan(802123) Ye(816694)
+// by Mengnan Shi(802123) Ye Yan(816694)
 // ===========================================================================
 
 module ebs
@@ -46,6 +46,7 @@ abstract sig Action {
   who : Principal  // indentifies which principal caused the action
 }
 
+// Network actions
 sig SendModeOn, RecvModeOn,
     SendChangeSettings, RecvChangeSettings
     extends Action {}
@@ -60,7 +61,7 @@ one sig DummyInitialAction extends Action {}
 // The system state
 sig State {
   network : lone Message,              // CAN Bus state: holds up to one message
-  icd_mode : Mode,                 // whether IXS system is in on or off mode
+  icd_mode : Mode,                 // whether ICD system is in on or off mode
   impulse_mode : Mode,             // whether the impulse generator is on or off
   joules_to_deliver : Joules,      // joules to deliver for ventrical fibrillation
   authorised_card : Principal,     // the authorised cardiologist
@@ -153,7 +154,7 @@ pred recv_change_settings[s, s' : State] {
 //
 // NOTE: In the initial template you are given, the attacker
 // is modelled as being able to modify the network contents arbitrarily.
-// However, for later parts of the assignment you will change this definition
+// Howeever, for later parts of the assignment you will change this definition
 // to only permit certain kinds of modifications to the state of the network.
 // When doing so, ensure you update the following line that describes the
 // attacker's abilities.
@@ -274,7 +275,6 @@ check turns_on_safe for 5 but 8 State
 // <FILL IN HERE>
 
 
-// ============================= HAZOP =======================================
 // Relationship to our HAZOP study:
 //
 // <FILL IN HERE>
