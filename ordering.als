@@ -7,7 +7,7 @@ module util/ordering[exactly elem]
  * and create a linear ordering over those five elements. The predicates and
  * functions below provide access to properties of the linear ordering, such as
  * which element is first in the ordering, or whether a given element precedes
- * another. You cannotcreate multiple linear orderings over the same signature with
+ * another. You cannot create multiple linear orderings over the same signature with
  * this model. If you that functionality, try using the util/sequence module instead.
  *
  * Technical comment:

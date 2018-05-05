@@ -13,7 +13,7 @@ sig Joules {}
 // the initial number of joules to deliver (30)
 one sig InitialJoulesToDeliver extends Joules {}
 
-// we ignore the clinical assistants for simplicity in this model 
+// we ignore the clinical assistants for simplicity in this model
 abstract sig Role {}
 one sig Cardiologist, Patient extends Role {}
 
@@ -77,14 +77,14 @@ fact {
 // =========================== Initial State =================================
 
 // The initial state of the system:
-//   - empty network, 
+//   - empty network,
 //   - ICD and impulse generator both off
 //   - joules to deliver at initial value
 //   - the authorised cardiologist is really a cardiologist
 //   - last_action set to the dummy value
 pred Init[s : State] {
-  no s.network and s.icd_mode = ModeOff and s.impulse_mode = ModeOff 
-  and s.joules_to_deliver = InitialJoulesToDeliver and 
+  no s.network and s.icd_mode = ModeOff and s.impulse_mode = ModeOff
+  and s.joules_to_deliver = InitialJoulesToDeliver and
   Cardiologist in s.authorised_card.roles and
   s.last_action = DummyInitialAction
 }
@@ -94,7 +94,7 @@ pred Init[s : State] {
 // Models the action in which a ModeOn message is sent on the network by the
 // authorised cardiologist.
 // Precondition: none
-// Postcondition: network now contains a ModeOn message from the authorised 
+// Postcondition: network now contains a ModeOn message from the authorised
 //                cardiologist
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
@@ -110,15 +110,24 @@ pred send_mode_on[s, s' : State] {
 }
 
 // Models the action in which a valid ModeOn message is received by the
-// ICD from the authorised cardiologist, causing the ICD system's mode to change 
+// ICD from the authorised cardiologist, causing the ICD system's mode to change
 // from Off to On and the message to be removed from the network
-// Precondition: <FILL IN HERE>               
-// Postcondition: <FILL IN HERE>
-//                last_action in RecvModeOn and 
+// Precondition: A valid ModeOn message is received by the ICD from the authorised cardiologist
+// Postcondition: network now contains no message
+//                icd_mode = ModeOn
+//                last_action in RecvModeOn and
 //                last_action.who = the source of the ModeOn message
 //                and nothing else changes
 pred recv_mode_on[s, s' : State] {
-  // <FILL IN HERE>
+  one m: s.network | m in ModeOnMessage
+  m.source= s'.authorised_card and
+  s'.network = s.network - m and
+  s'.icd_mode = ModeOn and
+  s'.impulse_mode = s.impulse_mode and
+  s'.joules_to_deliver = s.joules_to_deliver and
+  s'.authorised_card = s.authorised_card and
+  s'.last_action in RecvModeOn and
+  s'.last_action.who = m.source
 }
 
 // Models the action in which a valid ChangeSettingsRequest message is sent
