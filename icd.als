@@ -99,35 +99,38 @@ pred Init[s : State] {
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
 pred send_mode_on[s, s' : State] {
-  some m : ModeOnMessage | m.source = s.authorised_card =>
-  s'.network = s.network + m and
-  s'.icd_mode = s.icd_mode and
-  s'.impulse_mode = s.impulse_mode and
-  s'.joules_to_deliver = s.joules_to_deliver and
-  s'.authorised_card = s.authorised_card and
-  s'.last_action in SendModeOn and
-  s'.last_action.who = m.source
+   some m : ModeOnMessage | m.source = s.authorised_card =>
+      s'.network = s.network + m and
+      s'.icd_mode = s.icd_mode and
+      s'.impulse_mode = s.impulse_mode and
+      s'.joules_to_deliver = s.joules_to_deliver and
+      s'.authorised_card = s.authorised_card and
+      s'.last_action in SendModeOn and
+      s'.last_action.who = m.source
+   else
+      s' = s
 }
 
 // Models the action in which a valid ModeOn message is received by the
 // ICD from the authorised cardiologist, causing the ICD system's mode to change
 // from Off to On and the message to be removed from the network
 // Precondition: A valid ModeOn message is received by the ICD from the authorised cardiologist
-//               The system is at ModeOff mode【我加上的】
 // Postcondition: network now contains no message
 //                icd_mode = ModeOn
 //                last_action in RecvModeOn and
 //                last_action.who = the source of the ModeOn message
 //                and nothing else changes
 pred recv_mode_on[s, s' : State] {
-  one m: s.network | m in ModeOnMessage and m.source in s.authorised_card =>
-  s'.network = s.network - m and
-  s'.icd_mode = ModeOn and
-  s'.impulse_mode = ModeOn and
-  s'.joules_to_deliver = s.joules_to_deliver and
-  s'.authorised_card = s.authorised_card and
-  s'.last_action in RecvModeOn and
-  s'.last_action.who = m.source
+   one m: s.network | m in ModeOnMessage and m.source in s.authorised_card =>
+      s'.network = s.network - m and
+      s'.icd_mode = ModeOn and
+      s'.impulse_mode = ModeOn and
+      s'.joules_to_deliver = s.joules_to_deliver and
+      s'.authorised_card = s.authorised_card and
+      s'.last_action in RecvModeOn and
+      s'.last_action.who = m.source
+	else
+      s'= s
 }
 
 // Models the action in which a valid ChangeSettingsRequest message is sent
@@ -141,15 +144,16 @@ pred recv_mode_on[s, s' : State] {
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred send_change_settings[s, s' : State] {
-  all s | s.icd_mode in ModeOff and
-  some m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules and
-  s'.network = s.network + m and
-  s'.icd_mode = s.icd_mode and
-  s'.impulse_mode = s.impulse_mode and
-  s'.joules_to_deliver = s.joules_to_deliver and
-  s'.authorised_card = s.authorised_card and
-  s'.last_action in SendChangeSettings and
-  s'.last_action.who = m.source
+   some m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules =>
+      s'.network = s.network + m and
+      s'.icd_mode = s.icd_mode and
+      s'.impulse_mode = s.impulse_mode and
+      s'.joules_to_deliver = s.joules_to_deliver and
+      s'.authorised_card = s.authorised_card and
+      s'.last_action in SendChangeSettings and
+      s'.last_action.who = m.source
+   else
+      s'=s
 }
 
 // Models the action in which a valid ChangeSettingsRequest message is received
@@ -162,15 +166,17 @@ pred send_change_settings[s, s' : State] {
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred recv_change_settings[s, s' : State] {
-  all s | s.icd_mode in ModeOff and
-  one m: s.network | m in ChangeSettingsMessage and m.source in s.authorised_card and m.joules_to_deliver in Joules =>
-  s'.network = s.network - m and
-  s'.icd_mode = s.icd_mode and
-  s'.impulse_mode = s.impulse_mode and
-  s'.joules_to_deliver = m.joules_to_deliver and
-  s'.authorised_card = s.authorised_card and
-  s'.last_action in RecvChangeSettings and
-  s'.last_action.who = m.source
+   s.icd_mode in ModeOff and
+   one m: s.network | m in ChangeSettingsMessage and m.source in s.authorised_card and m.joules_to_deliver in Joules =>
+      s'.network = s.network - m and
+      s'.icd_mode = s.icd_mode and
+      s'.impulse_mode = s.impulse_mode and
+      s'.joules_to_deliver = m.joules_to_deliver and
+      s'.authorised_card = s.authorised_card and
+      s'.last_action in RecvChangeSettings and
+      s'.last_action.who = m.source
+   else
+      s'=s
 }
 
 // =========================== Attacker Actions ==============================
@@ -201,7 +207,6 @@ pred attacker_action[s, s' : State] {
   s'.last_action = AttackerAction
 }
 
-
 // =========================== State Transitions and Traces ==================
 
 // State transitions occur via the various actions of the system above
@@ -210,8 +215,8 @@ pred state_transition[s, s' : State] {
   send_mode_on[s,s']
   or recv_mode_on[s,s']
   or send_change_settings[s,s']
-  or recv_change_settings[s,s']
-  or attacker_action[s,s']
+//  or recv_change_settings[s,s']
+//  or attacker_action[s,s']
 }
 
 // Define the linear ordering on states to be that generated by the
@@ -244,7 +249,7 @@ assert icd_never_off_after_on {
      s.icd_mode = ModeOn implies s'.icd_mode = ModeOn
 }
 
-check icd_never_off_after_on for 4 expect 0
+check icd_never_off_after_on for 10 expect 0
 
 
 
