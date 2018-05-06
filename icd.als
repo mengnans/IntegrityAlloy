@@ -3,7 +3,7 @@
 // by Mengnan Shi(802123) Ye Yan(816694)
 // ===========================================================================
 
-module ebs
+module icd
 open util/ordering[State] as ord
 
 // =========================== System State ==================================
@@ -113,17 +113,17 @@ pred send_mode_on[s, s' : State] {
 // ICD from the authorised cardiologist, causing the ICD system's mode to change
 // from Off to On and the message to be removed from the network
 // Precondition: A valid ModeOn message is received by the ICD from the authorised cardiologist
-// Postcondition: network now contains no message
+//               The system is at ModeOff mode【我加上的】
+// Postcondition: network now contains a message【Stone，这里我改了，你之前写的是“network now contains no message”】
 //                icd_mode = ModeOn
 //                last_action in RecvModeOn and
 //                last_action.who = the source of the ModeOn message
 //                and nothing else changes
 pred recv_mode_on[s, s' : State] {
-  one m: s.network | m in ModeOnMessage
-  m.source= s'.authorised_card and
+  one m: s.network | m in ModeOnMessage | m.source= s'.authorised_card and
   s'.network = s.network - m and
   s'.icd_mode = ModeOn and
-  s'.impulse_mode = s.impulse_mode and
+  s'.impulse_mode = ModeOn and 【这里修改了】
   s'.joules_to_deliver = s.joules_to_deliver and
   s'.authorised_card = s.authorised_card and
   s'.last_action in RecvModeOn and
@@ -133,26 +133,44 @@ pred recv_mode_on[s, s' : State] {
 // Models the action in which a valid ChangeSettingsRequest message is sent
 // on the network, from the authorised cardiologist, specifying the new quantity of 
 // joules to deliver for ventrical fibrillation.
-// Precondition: <FILL IN HERE>
-// Postcondition: <FILL IN HERE>
+// Precondition: The system is turned on
+// Postcondition: network now contains a ChangeSettingsMessage message from the authorised
+//                   The message is from a the authorised cardiologist
+//                   The message contains a value of Joules
 //                last_action in SendChangeSettings and
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred send_change_settings[s, s' : State] {
-  // <FILL IN HERE>
+  s'.icd_mode in ModeOff and
+  some m : ChangeSettingsMessage | m.source = s.authorised_card | m.joules_to_deliver in Joules and
+  s'.network = s.network + m and
+  s'.icd_mode = s.icd_mode and
+  s'.impulse_mode = s.impulse_mode and
+  s'.joules_to_deliver = s.joules_to_deliver and
+  s'.authorised_card = s.authorised_card and
+  s'.last_action in ChangeSettingsMessage and
+  s'.last_action.who = m.source
 }
 
 // Models the action in which a valid ChangeSettingsRequest message is received
 // by the ICD, from the authorised cardiologist, causing the current joules to be 
 // updated to that contained in the message and the message to be removed from the 
 // network.
-// Precondition: <FILL IN HERE>
-// Postcondition: <FILL IN HERE>
+// Precondition: The system is in ModeOff mode
+// Postcondition: network now contains a message with a ChangeSettingsMessage command
 //                last_action in RecvChangeSettings and
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred recv_change_settings[s, s' : State] {
-  // <FILL IN HERE>
+  s'.icd_mode in ModeOff and
+  one m: s.network | m in ChangeSettingsMessage | m.source= s'.authorised_card | m.joules_to_deliver in Joules and
+  s'.network = s.network - m and
+  s'.icd_mode = s.icd_mode and
+  s'.impulse_mode = s.impulse_mode and
+  s'.joules_to_deliver = m.joules_to_deliver and
+  s'.authorised_card = s.authorised_card and
+  s'.last_action in RecvChangeSettings and
+  s'.last_action.who = m.source
 }
 
 // =========================== Attacker Actions ==============================
