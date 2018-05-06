@@ -99,7 +99,7 @@ pred Init[s : State] {
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
 pred send_mode_on[s, s' : State] {
-  some m : ModeOnMessage | m.source = s.authorised_card and
+  some m : ModeOnMessage | m.source = s.authorised_card =>
   s'.network = s.network + m and
   s'.icd_mode = s.icd_mode and
   s'.impulse_mode = s.impulse_mode and
@@ -120,8 +120,7 @@ pred send_mode_on[s, s' : State] {
 //                last_action.who = the source of the ModeOn message
 //                and nothing else changes
 pred recv_mode_on[s, s' : State] {
-  s.icd_mode in ModeOff and
-  one m: s.network | m in ModeOnMessage | m.source in s.authorised_card =>
+  one m: s.network | m in ModeOnMessage and m.source in s.authorised_card =>
   s'.network = s.network - m and
   s'.icd_mode = ModeOn and
   s'.impulse_mode = ModeOn and
@@ -142,14 +141,14 @@ pred recv_mode_on[s, s' : State] {
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred send_change_settings[s, s' : State] {
-  s.icd_mode in ModeOff and
-  some m : ChangeSettingsMessage | m.source in s.authorised_card | m.joules_to_deliver in Joules and
+  all s | s.icd_mode in ModeOff and
+  some m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules and
   s'.network = s.network + m and
   s'.icd_mode = s.icd_mode and
   s'.impulse_mode = s.impulse_mode and
   s'.joules_to_deliver = s.joules_to_deliver and
   s'.authorised_card = s.authorised_card and
-  s'.last_action in ChangeSettingsMessage and
+  s'.last_action in SendChangeSettings and
   s'.last_action.who = m.source
 }
 
@@ -163,8 +162,8 @@ pred send_change_settings[s, s' : State] {
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred recv_change_settings[s, s' : State] {
-  s'.icd_mode in ModeOff and
-  one m: s.network | m in ChangeSettingsMessage | m.source in s.authorised_card | m.joules_to_deliver in Joules =>
+  all s | s.icd_mode in ModeOff and
+  one m: s.network | m in ChangeSettingsMessage and m.source in s.authorised_card and m.joules_to_deliver in Joules =>
   s'.network = s.network - m and
   s'.icd_mode = s.icd_mode and
   s'.impulse_mode = s.impulse_mode and
@@ -245,7 +244,7 @@ assert icd_never_off_after_on {
      s.icd_mode = ModeOn implies s'.icd_mode = ModeOn
 }
 
-check icd_never_off_after_on for 10 expect 0
+check icd_never_off_after_on for 4 expect 0
 
 
 
