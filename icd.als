@@ -99,7 +99,7 @@ pred Init[s : State] {
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
 pred send_mode_on[s, s' : State] {
-   some m : ModeOnMessage | m.source = s.authorised_card =>
+   some m : ModeOnMessage | m.source = s.authorised_card and m.source.roles in Cardiologist =>
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
       s'.impulse_mode = s.impulse_mode and
@@ -146,7 +146,7 @@ pred recv_mode_on[s, s' : State] {
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred send_change_settings[s, s' : State] {
-   some m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules =>
+   some m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules m.source.roles in Cardiologist =>
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
       s'.impulse_mode = s.impulse_mode and
