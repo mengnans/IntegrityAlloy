@@ -107,6 +107,7 @@ pred send_mode_on[s, s' : State] {
       s'.authorised_card = s.authorised_card and
       s'.last_action in SendModeOn and
       s'.last_action.who = m.source
+   // in other cases, nothing should change
    else
       s' = s
 }
@@ -129,7 +130,8 @@ pred recv_mode_on[s, s' : State] {
       s'.authorised_card = s.authorised_card and
       s'.last_action in RecvModeOn and
       s'.last_action.who = m.source
-	else
+   // in other cases, nothing should change
+   else
       s'= s
 }
 
@@ -152,6 +154,7 @@ pred send_change_settings[s, s' : State] {
       s'.authorised_card = s.authorised_card and
       s'.last_action in SendChangeSettings and
       s'.last_action.who = m.source
+   // in other cases, nothing should change   
    else
       s'=s
 }
@@ -175,6 +178,7 @@ pred recv_change_settings[s, s' : State] {
       s'.authorised_card = s.authorised_card and
       s'.last_action in RecvChangeSettings and
       s'.last_action.who = m.source
+   // in other cases, nothing should change
    else
       s'=s
 }
