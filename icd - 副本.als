@@ -206,14 +206,15 @@ pred recv_change_settings[s, s' : State] {
 //                last_action is AttackerAction
 //                and nothing else changes
 pred attacker_action[s, s' : State] {
+   s'.network = s.network - m and
    s'.icd_mode = s.icd_mode and
    s'.joules_to_deliver = s.joules_to_deliver and
    s'.impulse_mode = s.impulse_mode and
    s'.authorised_card = s.authorised_card and
-   s'.last_action = AttackerAction
-//and
-  //all m: s'.network | m.source.roles = UndefinedRole
+   s'.last_action = AttackerAction and
+   all m: s'.network | m.source.roles = UndefinedRole
 }
+UndefinedRole
 
 // =========================== State Transitions and Traces ==================
 
@@ -272,7 +273,7 @@ assert inv_always {
 
 // Check that the invariant is never violated during 15
 // state transitions
-check inv_always for 10
+check inv_always for 15
 // This assertion holds.
 // The system starts with both the icd_mode and the impulse_mode is turned off, 
 // which indicates that this assertion holds (pred of "bothOff")
@@ -297,13 +298,12 @@ check unexplained_assertion for 10
 // Check that the device turns on only after properly instructed to
 // i.e. that the RecvModeOn action occurs only after a SendModeOn action has occurred
 assert turns_on_safe {
-   all s: State | all s' : ord/next[s] | 
-//      s.last_action in SendModeOn => s'.last_action in RecvModeOn
-		s'.last_action in RecvModeOn => s.last_action in SendModeOn
+  all s: State | all s' : ord/next[s] | s'.last_action in RecvModeOn =>
+     s.last_action in SendModeOn
 }
 
 // NOTE: you may want to adjust these thresholds for your own use
-check turns_on_safe for 10
+check turns_on_safe for 5 but 8 State
 // <FILL IN HERE: does the assertion hold in the updated attacker model in which
 // the attacker cannot guess Principal ids? why / why not?>
 // what additional restrictions need to be added to the attacker model?
