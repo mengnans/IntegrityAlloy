@@ -100,6 +100,7 @@ pred Init[s : State] {
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
 pred send_mode_on[s, s' : State] {
+// 这里我不很懂啊 明天讨论
    some m : ModeOnMessage | m.source = s.authorised_card and m.source.roles in Cardiologist =>
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
