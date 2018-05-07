@@ -87,7 +87,7 @@ fact {
 pred Init[s : State] {
   no s.network and s.icd_mode = ModeOff and s.impulse_mode = ModeOff
   and s.joules_to_deliver = InitialJoulesToDeliver and
-  s.authorised_card.roles in Cardiologist and
+  Cardiologist in s.authorised_card.roles and
   s.last_action = DummyInitialAction
 }
 
@@ -100,7 +100,7 @@ pred Init[s : State] {
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
 pred send_mode_on[s, s' : State] {
-   one m : ModeOnMessage | m.source in s.authorised_card and s.icd_mode in ModeOff =>
+   some m : ModeOnMessage | m.source = s.authorised_card and m.source.roles in Cardiologist =>
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
       s'.impulse_mode = s.impulse_mode and
@@ -147,7 +147,7 @@ pred recv_mode_on[s, s' : State] {
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred send_change_settings[s, s' : State] {
-   one m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules =>
+   some m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules and m.source.roles in Cardiologist =>
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
       s'.impulse_mode = s.impulse_mode and
@@ -298,11 +298,12 @@ check unexplained_assertion for 10
 // i.e. that the RecvModeOn action occurs only after a SendModeOn action has occurred
 assert turns_on_safe {
    all s: State | all s' : ord/next[s] | 
-      s'.last_action in RecvModeOn => s.last_action in SendModeOn
+//      s.last_action in SendModeOn => s'.last_action in RecvModeOn
+		s'.last_action in RecvModeOn => s.last_action in SendModeOn
 }
 
 // NOTE: you may want to adjust these thresholds for your own use
-check turns_on_safe for 15
+check turns_on_safe for 10
 // <FILL IN HERE: does the assertion hold in the updated attacker model in which
 // the attacker cannot guess Principal ids? why / why not?>
 // what additional restrictions need to be added to the attacker model?

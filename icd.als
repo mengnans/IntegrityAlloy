@@ -87,7 +87,7 @@ fact {
 pred Init[s : State] {
   no s.network and s.icd_mode = ModeOff and s.impulse_mode = ModeOff
   and s.joules_to_deliver = InitialJoulesToDeliver and
-  Cardiologist in s.authorised_card.roles and
+  s.authorised_card.roles in Cardiologist and
   s.last_action = DummyInitialAction
 }
 
@@ -100,7 +100,7 @@ pred Init[s : State] {
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
 pred send_mode_on[s, s' : State] {
-   some m : ModeOnMessage | m.source = s.authorised_card and m.source.roles in Cardiologist =>
+   one m : ModeOnMessage | m.source in s.authorised_card and s.icd_mode in ModeOff =>
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
       s'.impulse_mode = s.impulse_mode and
@@ -147,7 +147,7 @@ pred recv_mode_on[s, s' : State] {
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred send_change_settings[s, s' : State] {
-   some m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules and m.source.roles in Cardiologist =>
+   one m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules =>
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
       s'.impulse_mode = s.impulse_mode and
@@ -210,9 +210,8 @@ pred attacker_action[s, s' : State] {
    s'.joules_to_deliver = s.joules_to_deliver and
    s'.impulse_mode = s.impulse_mode and
    s'.authorised_card = s.authorised_card and
-   s'.last_action = AttackerAction
-//and
-  //all m: s'.network | m.source.roles = UndefinedRole
+   s'.last_action = AttackerAction and
+      all m: s'.network | m.source.roles = UndefinedRole
 }
 
 // =========================== State Transitions and Traces ==================
@@ -298,8 +297,7 @@ check unexplained_assertion for 10
 // i.e. that the RecvModeOn action occurs only after a SendModeOn action has occurred
 assert turns_on_safe {
    all s: State | all s' : ord/next[s] | 
-//      s.last_action in SendModeOn => s'.last_action in RecvModeOn
-		s'.last_action in RecvModeOn => s.last_action in SendModeOn
+      s'.last_action in RecvModeOn => s.last_action in SendModeOn
 }
 
 // NOTE: you may want to adjust these thresholds for your own use
