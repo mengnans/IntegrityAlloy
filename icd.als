@@ -17,8 +17,6 @@ one sig InitialJoulesToDeliver extends Joules {}
 abstract sig Role {}
 one sig Cardiologist, Patient extends Role {}
 
-one sig UndefinedRole extends Role {}
-
 // principals have associated roles
 sig Principal {
   roles : set Role
@@ -100,7 +98,7 @@ pred Init[s : State] {
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
 pred send_mode_on[s, s' : State] {
-   one m : ModeOnMessage | m.source in s.authorised_card and s.icd_mode in ModeOff =>
+   some m : ModeOnMessage | m.source = s.authorised_card and
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
       s'.impulse_mode = s.impulse_mode and
@@ -108,9 +106,6 @@ pred send_mode_on[s, s' : State] {
       s'.authorised_card = s.authorised_card and
       s'.last_action in SendModeOn and
       s'.last_action.who = m.source
-   else
-      // in other cases, nothing should change
-      s' = s
 }
 
 // Models the action in which a valid ModeOn message is received by the
@@ -132,8 +127,8 @@ pred recv_mode_on[s, s' : State] {
       s'.last_action in RecvModeOn and
       s'.last_action.who = m.source
    else
-      // in other cases, nothing should change
-      s'= s
+      // do nothing
+     s' = s 
 }
 
 // Models the action in which a valid ChangeSettingsRequest message is sent
@@ -147,7 +142,8 @@ pred recv_mode_on[s, s' : State] {
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
 pred send_change_settings[s, s' : State] {
-   one m : ChangeSettingsMessage | m.source in s.authorised_card and m.joules_to_deliver in Joules =>
+      some m : ChangeSettingsMessage | m.source = s.authorised_card and   
+      m.joules_to_deliver in Joules and
       s'.network = s.network + m and
       s'.icd_mode = s.icd_mode and
       s'.impulse_mode = s.impulse_mode and
@@ -155,9 +151,6 @@ pred send_change_settings[s, s' : State] {
       s'.authorised_card = s.authorised_card and
       s'.last_action in SendChangeSettings and
       s'.last_action.who = m.source
-   else
-      // in other cases, nothing should change
-      s'=s
 }
 
 // Models the action in which a valid ChangeSettingsRequest message is received
@@ -181,8 +174,8 @@ pred recv_change_settings[s, s' : State] {
       s'.last_action in RecvChangeSettings and
       s'.last_action.who = m.source
    else
-      // in other cases, nothing should change
-      s'=s
+      // do nothing
+   s' =s      
 }
 
 // =========================== Attacker Actions ==============================
@@ -211,7 +204,9 @@ pred attacker_action[s, s' : State] {
    s'.impulse_mode = s.impulse_mode and
    s'.authorised_card = s.authorised_card and
    s'.last_action = AttackerAction and
-      all m: s'.network | m.source.roles = UndefinedRole
+   // attackers got the message from the network,
+   // and send it back to the ICD system again.
+   s'.network = s.network
 }
 
 // =========================== State Transitions and Traces ==================
@@ -271,7 +266,7 @@ assert inv_always {
 
 // Check that the invariant is never violated during 15
 // state transitions
-check inv_always for 10
+check inv_always for 15
 // This assertion holds.
 // The system starts with both the icd_mode and the impulse_mode is turned off, 
 // which indicates that this assertion holds (pred of "bothOff")
@@ -280,7 +275,7 @@ check inv_always for 10
 //       counterexamples, so you can interpret them
 
 // Check that all the RecvChangeSettings commands are not sent by a Patient 
-// when there is no attacker exists.
+// when there is no attacker action exists.
 assert unexplained_assertion {
   all s : State | (all s' : State | s'.last_action not in AttackerAction) =>
       s.last_action in RecvChangeSettings =>
@@ -290,8 +285,10 @@ assert unexplained_assertion {
 check unexplained_assertion for 10
 // This assertion holds.
 // There are two kinds ok roles: the Patient and the Cardiologist.
-// If no data is altered (no attaker), the patient cannot generate a 
-// RecvChangeSettings message.
+// The RecvChangeSettings action only happens after receiving
+// a valid ChangeSettings message. If data is not altered (no attacks),
+// the Patient will never generate a valid ChangeSettings message. 
+// Thus, this assertion always holds.
 
 // Check that the device turns on only after properly instructed to
 // i.e. that the RecvModeOn action occurs only after a SendModeOn action has occurred
@@ -302,16 +299,33 @@ assert turns_on_safe {
 
 // NOTE: you may want to adjust these thresholds for your own use
 check turns_on_safe for 10
-// <FILL IN HERE: does the assertion hold in the updated attacker model in which
-// the attacker cannot guess Principal ids? why / why not?>
-// what additional restrictions need to be added to the attacker model?
+// Conclusion: The assertion still does not hold even when the attacker's ability is restricted.
+// Reason: The ability-reduced attackers cannot guess the id of principals, but they
+// can get messages sent from principals. For example, if an authorised Cardiologist 
+// wants to turn on the system, he sends a ModeOnMessage to the ICD system. 
+// However, if the attackers get this message before the ICD system does, the attacker 
+// can have all the information they want, including the source principal. In our implementation,
+// the attacker just send the ModeOnMessage to the system again. Therefore,
+// the assertion does not hold, because the real order is going to be:
+// SendModeOn -> AttackerAction -> RecvModeOn.
 
+// Why in a real implementation of this system one would need to restrict the 
+// attacker's abilities even further?
+// Reason: In the real implementation, the attackers can never get the content
+// of the message so easily. The messages are usually encrypted. For example,
+// using the ICD system's public key to encrypt the messages. Therefore,
+// the attackers cannot modify the message they got from the network,
+// and they are also unable to get the content of it (e.g. the source principal).
 
+// What additional restrictions need to be added to the attacker model?
+// New restriction: The attacker can no longer get the content of the message
+// or modify it.
 
 // Attacks still permitted by the updated attacker model:
-// 
-// <FILL IN HERE>
-
+// Answer: Even when attackers cannot get the content of the message. The
+// attackers can still get the message sent from an authorised principal, and 
+// send it back to the ICD system once or multiple times. It is called the replay 
+// attack.
 
 // Relationship to our HAZOP study:
 //
