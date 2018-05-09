@@ -85,7 +85,7 @@ fact {
 pred Init[s : State] {
   no s.network and s.icd_mode = ModeOff and s.impulse_mode = ModeOff
   and s.joules_to_deliver = InitialJoulesToDeliver and
-  s.authorised_card.roles in Cardiologist and
+  Cardiologist in s.authorised_card.roles and
   s.last_action = DummyInitialAction
 }
 
