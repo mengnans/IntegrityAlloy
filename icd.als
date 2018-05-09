@@ -346,4 +346,46 @@ check turns_on_safe for 10
 
 // Relationship to our HAZOP study:
 //
-// <FILL IN HERE>
+// These hazards are captured by our HAZOP study:
+// 1. Upon receipt of a ChangeSettingsRequest message on the network from an authorised principal,
+//    the system reply to another principal. This is because an attacker can hack into the network
+//    and get the reply message.
+// 2. Some unauthorized user can change the settings too. This is because an attacker can capture
+//    a message and send it to the ICD system to change the settings.
+// 3. The system does nothing when receiving a ChangeSettingsRequest message. This is because
+//    an attacker has sent too many messages to the ICD System so that the system cannot receive
+//    any more messages. It's a denial-of-service attack.
+//
+// These are the supplement of the HAZOP study:
+// Design item: If an attacker is trying to fake a message, the system should not respond to the message.
+// Guide Word: NO OR NOT
+//    Deviation: The ICD System does not respond to a message sent from an authorized Principal.
+//    Possible Causes: The system failed to detect whether a message is from an attacker.
+//    Consequences: Cardiologist cannot change the settings 
+//    Frequency: Incredible
+//    Severity: Catastrophic
+//    Risk class: Ⅳ
+//    Safeguards: None
+//    Recommendations: Set up a hotline for the customer to report the bug.
+// Guide Word: PART OF
+//    Deviation: The system can only detect a part of the faked message.
+//    Possible Causes: The detect system is not strong enough.
+//    Consequences: Attacker can still fake some messages to the system.
+//    Frequency: Incredible
+//    Severity: Catastrophic
+//    Risk class: Ⅳ
+//    Safeguards: None
+//    Recommendations: Set up a hotline for the customer to report the bug.
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
+   
