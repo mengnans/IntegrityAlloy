@@ -19,18 +19,18 @@ one sig Cardiologist, Patient extends Role {}
 
 // principals have associated roles
 sig Principal {
-  roles : set Role
+   roles : set Role
 }
 
 // an abstract signature for network messages
 abstract sig Message {
-  source : Principal
+   source : Principal
 }
 
 // ChangeSettingsRequest messages
 // Note: we ignore the tachybound part to keep things tractable
 sig ChangeSettingsMessage extends Message {
-  joules_to_deliver : Joules
+   joules_to_deliver : Joules
 }
 
 // ModeOn message
@@ -60,18 +60,18 @@ one sig DummyInitialAction extends Action {}
 
 // The system state
 sig State {
-  network : lone Message,          // CAN Bus state: holds up to one message
-  icd_mode : Mode,                 // whether ICD system is in on or off mode
-  impulse_mode : Mode,             // whether the impulse generator is on or off
-  joules_to_deliver : Joules,      // joules to deliver for ventrical fibrillation
-  authorised_card : Principal,     // the authorised cardiologist
-  last_action : Action,            // identifies the most recent action performed
+   network : lone Message,          // CAN Bus state: holds up to one message
+   icd_mode : Mode,                 // whether ICD system is in on or off mode
+   impulse_mode : Mode,             // whether the impulse generator is on or off
+   joules_to_deliver : Joules,      // joules to deliver for ventrical fibrillation
+   authorised_card : Principal,     // the authorised cardiologist
+   last_action : Action,            // identifies the most recent action performed
 }
 
 // an axiom that restricts the model to never allow more than one messasge on
 // the network at a time; a simplifying assumption to ease the analysis
 fact {
-  all s : State | lone s.network
+   all s : State | lone s.network
 }
 
 // =========================== Initial State =================================
@@ -83,10 +83,10 @@ fact {
 //   - the authorised cardiologist is really a cardiologist
 //   - last_action set to the dummy value
 pred Init[s : State] {
-  no s.network and s.icd_mode = ModeOff and s.impulse_mode = ModeOff
-  and s.joules_to_deliver = InitialJoulesToDeliver and
-  Cardiologist in s.authorised_card.roles and
-  s.last_action = DummyInitialAction
+   no s.network and s.icd_mode = ModeOff and s.impulse_mode = ModeOff
+   and s.joules_to_deliver = InitialJoulesToDeliver and
+   Cardiologist in s.authorised_card.roles and
+   s.last_action = DummyInitialAction
 }
 
 // =========================== Actions =======================================
@@ -248,20 +248,23 @@ assert icd_never_off_after_on {
 
 check icd_never_off_after_on for 10 expect 0
 
+
+
+
 pred bothOn[s: State]{
-  all s: State | s.icd_mode in ModeOn => s.impulse_mode in ModeOn	
+   all s: State | s.icd_mode in ModeOn => s.impulse_mode in ModeOn	
 }
 
 pred bothOff[s: State]{
-  all s: State | s.icd_mode in ModeOff => s.impulse_mode in ModeOff	
+   all s: State | s.icd_mode in ModeOff => s.impulse_mode in ModeOff	
 }
 
 pred inv[s : State] {
-  all s: State | bothOn[s] and bothOff[s]
+   all s: State | bothOn[s] and bothOff[s]
 }
 
 assert inv_always {
-  inv[ord/first] and all s : ord/nexts[ord/first] | inv[s]
+   inv[ord/first] and all s : ord/nexts[ord/first] | inv[s]
 }
 
 // Check that the invariant is never violated during 15
@@ -274,21 +277,25 @@ check inv_always for 15
 // switched on (pred of "bothOn")
 //       counterexamples, so you can interpret them
 
+
+
 // Check that all the RecvChangeSettings commands are not sent by a Patient 
 // when there is no attacker action exists.
 assert unexplained_assertion {
-  all s : State | (all s' : State | s'.last_action not in AttackerAction) =>
+   all s : State | (all s' : State | s'.last_action not in AttackerAction) =>
       s.last_action in RecvChangeSettings =>
       Patient not in s.last_action.who.roles
 }
 
 check unexplained_assertion for 10
-// This assertion holds.
+// This assertion does not hold.
 // There are two kinds ok roles: the Patient and the Cardiologist.
-// The RecvChangeSettings action only happens after receiving
-// a valid ChangeSettings message. If data is not altered (no attacks),
-// the Patient will never generate a valid ChangeSettings message. 
-// Thus, this assertion always holds.
+// At the very beginning, the "pred Init[s : State]" states that the Cardiologist is 
+// authorised. However, there is no declaration that the Patient is not authorised.
+// So, even without an attacker, a Patient can still sent a valid ChangeSettings
+// message and trigger the RecvChangeSettings action.
+
+
 
 // Check that the device turns on only after properly instructed to
 // i.e. that the RecvModeOn action occurs only after a SendModeOn action has occurred
@@ -326,6 +333,10 @@ check turns_on_safe for 10
 // attackers can still get the message sent from an authorised principal, and 
 // send it back to the ICD system once or multiple times. It is called the replay 
 // attack.
+
+
+
+// =========================== HAZOP ====================================
 
 // Relationship to our HAZOP study:
 //
