@@ -94,7 +94,7 @@ pred Init[s : State] {
 // Models the action in which a ModeOn message is sent on the network by the
 // authorised cardiologist.
 // Precondition: none
-// Postcondition: network now contains a ModeOn message from the authorised cardiologist
+// Postcondition: network now contains a ModeOn message from an authorised cardiologist
 //                last_action is SendModeOn for the message's sender
 //                and nothing else changes
 pred send_mode_on[s, s' : State] {
@@ -127,17 +127,17 @@ pred recv_mode_on[s, s' : State] {
       s'.last_action in RecvModeOn and
       s'.last_action.who = m.source
    else
-      // do nothing
+      // do nothing in other cases
      s' = s 
 }
 
 // Models the action in which a valid ChangeSettingsRequest message is sent
 // on the network, from the authorised cardiologist, specifying the new quantity of 
 // joules to deliver for ventrical fibrillation.
-// Precondition: The system is turned off
-// Postcondition: network now contains a ChangeSettingsMessage message from the authorised
-//                   The message is from a the authorised cardiologist
-//                   The message contains a value of Joules
+// Precondition: none
+// Postcondition: network now contains a ChangeSettingsMessage message
+//                The message is from an authorised cardiologist
+//                The message contains a valid value of Joules
 //                last_action in SendChangeSettings and
 //                last_action.who = the source of the ChangeSettingsMessage
 //                and nothing else changes
@@ -162,6 +162,8 @@ pred send_change_settings[s, s' : State] {
 // Postcondition: network now contains a message with a ChangeSettingsMessage command
 //                last_action in RecvChangeSettings and
 //                last_action.who = the source of the ChangeSettingsMessage
+//                network now contains no message
+//                joules_to_deliver now is changed to the m.joules_to_deliver
 //                and nothing else changes
 pred recv_change_settings[s, s' : State] {
    s.icd_mode in ModeOff and
@@ -174,7 +176,7 @@ pred recv_change_settings[s, s' : State] {
       s'.last_action in RecvChangeSettings and
       s'.last_action.who = m.source
    else
-      // do nothing
+      // do nothing in other cases
    s' =s      
 }
 
@@ -191,8 +193,12 @@ pred recv_change_settings[s, s' : State] {
 // When doing so, ensure you update the following line that describes the
 // attacker's abilities.
 //
-// Attacker's abilities: can modify network contents arbitrarily
-//                       <UPDATE HERE>
+// Attacker's abilities: can modify the network contents arbitrarily
+// Updated abiliities: can no longer modify the network contents arbitrarily.
+//                              because they can't guess principals' id.
+//                              However, it can get the messagse sent from other
+//                              principals. They can modify these messages
+//                              or just resend these messages.
 //
 // Precondition: none
 // Postcondition: network state changes in accordance with attacker's abilities
@@ -289,7 +295,7 @@ assert unexplained_assertion {
 
 check unexplained_assertion for 10
 // This assertion does not hold.
-// There are two kinds ok roles: the Patient and the Cardiologist.
+// There are two kinds of roles: the Patient and the Cardiologist.
 // At the very beginning, the "pred Init[s : State]" states that the Cardiologist is 
 // authorised. However, there is no declaration that the Patient is not authorised.
 // So, even without an attacker, a Patient can still sent a valid ChangeSettings
