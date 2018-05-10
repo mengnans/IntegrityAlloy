@@ -43,7 +43,7 @@ one sig ModeOn, ModeOff extends Mode {}
 
 // meta information in the model that identifies the last action performed
 abstract sig Action {
-  who : Principal  // indentifies which principal caused the action
+  who : Principal  // identifies which principal caused the action
 }
 
 // Network actions
@@ -55,7 +55,7 @@ sig SendModeOn, RecvModeOn,
 one sig AttackerAction extends Action {}
 
 // a dummy action which will be the "last action" in the initial state
-// we do this just to make sure that every state has a last action
+// we do this just to make sure that every state has the last action
 one sig DummyInitialAction extends Action {}
 
 // The system state
@@ -68,7 +68,7 @@ sig State {
    last_action : Action,            // identifies the most recent action performed
 }
 
-// an axiom that restricts the model to never allow more than one messasge on
+// an axiom that restricts the model to never allow more than one message on
 // the network at a time; a simplifying assumption to ease the analysis
 fact {
    all s : State | lone s.network
@@ -187,18 +187,18 @@ pred recv_change_settings[s, s' : State] {
 // is that of the network
 //
 // NOTE: In the initial template you are given, the attacker
-// is modelled as being able to modify the network contents arbitrarily.
+// is modeled as being able to modify the network contents arbitrarily.
 // However, for later parts of the assignment you will change this definition
 // to only permit certain kinds of modifications to the state of the network.
 // When doing so, ensure you update the following line that describes the
 // attacker's abilities.
 //
 // Attacker's abilities: can modify the network contents arbitrarily
-// Updated abiliities: can no longer modify the network contents arbitrarily.
+// Updated abilities: can no longer modify the network contents arbitrarily.
 //                              because they can't guess principals' id.
-//                              However, it can get the messagse sent from other
-//                              principals. They can modify these messages
-//                              or just resend these messages.
+//                              However, it can get the message sent from other
+//                              principals on the network. They can modify these 
+//                              messages or just resend these messages.
 //
 // Precondition: none
 // Postcondition: network state changes in accordance with attacker's abilities
@@ -253,22 +253,28 @@ assert icd_never_off_after_on {
 }
 
 check icd_never_off_after_on for 10 expect 0
+// the assertion holds, because our model only allow valid ModeOnMessage
+// to turn on the icd system. Once it's turned on,  there is no other actions
+// in our model to turn it off. Thus, if it's turned on, it will never be turned off.
 
 
 
-
+// if icd is truned on, impulse generator must be turned on.
 pred bothOn[s: State]{
    all s: State | s.icd_mode in ModeOn => s.impulse_mode in ModeOn	
 }
 
+// if icd is truned off, impulse generator must be turned off.
 pred bothOff[s: State]{
    all s: State | s.icd_mode in ModeOff => s.impulse_mode in ModeOff	
 }
+
 
 pred inv[s : State] {
    all s: State | bothOn[s] and bothOff[s]
 }
 
+// for all the states, icd and impulse generator are both turned on or off.
 assert inv_always {
    inv[ord/first] and all s : ord/nexts[ord/first] | inv[s]
 }
@@ -280,9 +286,8 @@ check inv_always for 15
 // The system starts with both the icd_mode and the impulse_mode is turned off, 
 // which indicates that this assertion holds (pred of "bothOff")
 // When a ModeOnMessage is received by the system, both of the two components are 
-// switched on (pred of "bothOn")
-//       counterexamples, so you can interpret them
-
+// switched on (pred of "bothOn"), and they will always be both turned on in the following
+// states. Thus, the assertion holds.
 
 
 // Check that all the RecvChangeSettings commands are not sent by a Patient 
@@ -298,7 +303,7 @@ check unexplained_assertion for 10
 // There are two kinds of roles: the Patient and the Cardiologist.
 // At the very beginning, the "pred Init[s : State]" states that the Cardiologist is 
 // authorised. However, there is no declaration that the Patient is not authorised.
-// So, even without an attacker, a Patient can still sent a valid ChangeSettings
+// Thus, even without an attacker, a Patient can still send a valid ChangeSettings
 // message and trigger the RecvChangeSettings action.
 
 
@@ -356,7 +361,7 @@ check turns_on_safe for 10
 //    an attacker has sent too many messages to the ICD System so that the system cannot receive
 //    any more messages. It's a denial-of-service attack.
 //
-// These are the supplement of the HAZOP study:
+// These are the supplement for the HAZOP study:
 // Design item: If an attacker is trying to fake a message, the system should not respond to the message.
 // Guide Word: NO OR NOT
 //    Deviation: The ICD System does not respond to a message sent from an authorized Principal.
